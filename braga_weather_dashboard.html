@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Braga — Clima Fevereiro 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --sky: #e8f4fd;
+    --deep: #1a3a5c;
+    --rain: #4a90d9;
+    --sun: #f5a623;
+    --cloud: #8fb8d8;
+    --mist: #c8dff0;
+    --text: #1a2e42;
+    --soft: #6b8fa8;
+    --white: #ffffff;
+    --card: rgba(255,255,255,0.85);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(160deg, #d6eaf8 0%, #e8f4fd 40%, #fef9f0 100%);
+    min-height: 100vh;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ANIMATED BACKGROUND */
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .cloud-shape {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    filter: blur(40px);
+    animation: drift linear infinite;
+  }
+
+  .cloud-shape:nth-child(1) { width: 400px; height: 200px; top: 5%; left: -10%; animation-duration: 40s; }
+  .cloud-shape:nth-child(2) { width: 300px; height: 150px; top: 15%; left: 60%; animation-duration: 55s; animation-delay: -15s; }
+  .cloud-shape:nth-child(3) { width: 500px; height: 180px; top: 60%; left: -5%; animation-duration: 70s; animation-delay: -30s; }
+
+  @keyframes drift {
+    from { transform: translateX(-100px); }
+    to { transform: translateX(calc(100vw + 100px)); }
+  }
+
+  .rain-drop {
+    position: absolute;
+    width: 1.5px;
+    background: linear-gradient(to bottom, transparent, rgba(74,144,217,0.4));
+    animation: fall linear infinite;
+    border-radius: 2px;
+  }
+
+  @keyframes fall {
+    from { transform: translateY(-100px); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    to { transform: translateY(100vh); opacity: 0; }
+  }
+
+  /* LAYOUT */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  /* HEADER */
+  .header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    margin-bottom: 48px;
+    animation: slideDown 0.8s ease both;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .location-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--rain);
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  .dot { width: 6px; height: 6px; background: var(--sun); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 900;
+    line-height: 1.05;
+    color: var(--deep);
+    margin-bottom: 12px;
+  }
+
+  h1 em { color: var(--rain); font-style: normal; }
+
+  .subtitle {
+    font-size: 15px;
+    color: var(--soft);
+    font-weight: 300;
+    max-width: 480px;
+    line-height: 1.6;
+  }
+
+  .temp-hero {
+    text-align: right;
+  }
+
+  .temp-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 80px;
+    font-weight: 700;
+    color: var(--deep);
+    line-height: 1;
+  }
+
+  .temp-big span { font-size: 36px; color: var(--soft); }
+  .temp-range { font-size: 13px; color: var(--soft); margin-top: 4px; }
+
+  /* KPI GRID */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.8s ease 0.2s both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .kpi-card {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 24px 20px;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 4px 20px rgba(26,58,92,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: default;
+  }
+
+  .kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(26,58,92,0.14);
+  }
+
+  .kpi-icon { font-size: 28px; margin-bottom: 12px; }
+  .kpi-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--deep);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .kpi-value span { font-size: 18px; font-weight: 400; color: var(--soft); }
+  .kpi-label { font-size: 12px; color: var(--soft); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+
+  /* CHARTS GRID */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.8s ease 0.4s both;
+  }
+
+  .chart-card {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 4px 20px rgba(26,58,92,0.08);
+  }
+
+  .chart-card.wide {
+    grid-column: 1 / -1;
+  }
+
+  .chart-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--deep);
+    margin-bottom: 4px;
+  }
+
+  .chart-subtitle {
+    font-size: 12px;
+    color: var(--soft);
+    margin-bottom: 20px;
+    font-weight: 300;
+  }
+
+  .chart-container { position: relative; height: 260px; }
+  .chart-container.tall { height: 320px; }
+
+  /* CALENDAR */
+  .calendar-card {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 4px 20px rgba(26,58,92,0.08);
+    margin-bottom: 20px;
+    animation: fadeUp 0.8s ease 0.6s both;
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .calendar-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .filter-btn {
+    border: 1px solid rgba(107,143,168,0.25);
+    background: rgba(255,255,255,0.7);
+    color: var(--deep);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .filter-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26,58,92,0.1);
+  }
+
+  .filter-btn.active {
+    background: var(--rain);
+    border-color: var(--rain);
+    color: white;
+  }
+
+  .day-header {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 8px;
+  }
+
+  .day-cell {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1.5px solid transparent;
+    position: relative;
+  }
+
+  .day-cell:hover { transform: scale(1.08); z-index: 2; }
+  .day-cell.is-hidden { opacity: 0.2; filter: grayscale(0.7); }
+  .day-cell.is-selected { border-color: var(--deep); box-shadow: 0 0 0 2px rgba(26,58,92,0.12); }
+
+  .day-cell.sunny {
+    background: linear-gradient(135deg, #fff8e8, #ffefc0);
+    color: #8a6200;
+    border-color: rgba(245,166,35,0.3);
+  }
+
+  .day-cell.rainy {
+    background: linear-gradient(135deg, #e8f3fc, #cce4f7);
+    color: #1a4a7a;
+    border-color: rgba(74,144,217,0.3);
+  }
+
+  .day-cell.cloudy {
+    background: linear-gradient(135deg, #f0f5f9, #dde8f0);
+    color: #4a6070;
+    border-color: rgba(143,184,216,0.3);
+  }
+
+  .day-cell.mixed {
+    background: linear-gradient(135deg, #f5f0ff, #e8f3fc);
+    color: #4a3a6a;
+    border-color: rgba(150,120,200,0.3);
+  }
+
+  .day-cell.empty { background: transparent; border-color: transparent; cursor: default; }
+
+  .day-num { font-size: 14px; font-weight: 700; line-height: 1; }
+  .day-icon { font-size: 16px; line-height: 1; }
+
+  /* TOOLTIP */
+  .tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--deep);
+    color: white;
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+  }
+
+  .day-cell:hover .tooltip { opacity: 1; }
+
+  .day-detail {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.65);
+    border: 1px solid rgba(255,255,255,0.9);
+    color: var(--deep);
+    font-size: 13px;
+  }
+
+  /* INSIGHTS */
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    animation: fadeUp 0.8s ease 0.8s both;
+  }
+
+  .insight-card {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 4px 20px rgba(26,58,92,0.08);
+  }
+
+  .insight-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 14px;
+  }
+
+  .tag-rain { background: rgba(74,144,217,0.15); color: var(--rain); }
+  .tag-sun { background: rgba(245,166,35,0.15); color: #c47a00; }
+  .tag-temp { background: rgba(26,58,92,0.1); color: var(--deep); }
+
+  .insight-text {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .insight-text strong { font-weight: 500; color: var(--deep); }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 12px;
+    color: var(--soft);
+    font-weight: 300;
+  }
+
+  .source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(255,255,255,0.8);
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 768px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .insights-grid { grid-template-columns: 1fr; }
+    .header { grid-template-columns: 1fr; }
+    .temp-hero { text-align: left; margin-top: 16px; }
+    .calendar-grid { gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Animated background -->
+<div class="bg-layer" id="bgLayer"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="location-badge">
+        <div class="dot"></div>
+        📍 Braga, Portugal
+      </div>
+      <h1>Clima de<br><em>Fevereiro</em> 2026</h1>
+      <p class="subtitle">Análise meteorológica completa com dados históricos e previsões para o mês mais frio do inverno bracarense.</p>
+    </div>
+    <div class="temp-hero">
+      <div class="temp-big">12.8<span>°C</span></div>
+      <div class="temp-range">Máx. média mensal</div>
+      <div class="temp-range" style="margin-top:4px">Mín. noturna: 5°C</div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon">🌧️</div>
+      <div class="kpi-value">13 <span>dias</span></div>
+      <div class="kpi-label">Dias de Chuva</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">☀️</div>
+      <div class="kpi-value">11 <span>dias</span></div>
+      <div class="kpi-label">Dias de Sol</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">💧</div>
+      <div class="kpi-value">89 <span>mm</span></div>
+      <div class="kpi-label">Precipitação Total</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">🌤️</div>
+      <div class="kpi-value">6.2 <span>h/dia</span></div>
+      <div class="kpi-label">Horas de Sol/Dia</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="charts-grid">
+    <!-- Bar chart: rain vs sun days by week -->
+    <div class="chart-card">
+      <div class="chart-title">Dias de Chuva vs Sol por Semana</div>
+      <div class="chart-subtitle">Distribuição semanal ao longo de fevereiro</div>
+      <div class="chart-container">
+        <canvas id="weeklyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Pie chart -->
+    <div class="chart-card">
+      <div class="chart-title">Composição do Mês</div>
+      <div class="chart-subtitle">Distribuição dos tipos de dia em fevereiro</div>
+      <div class="chart-container">
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Scatter plot: temperature vs sunshine hours -->
+    <div class="chart-card wide">
+      <div class="chart-title">Gráfico de Dispersão — Temperatura vs Horas de Sol</div>
+      <div class="chart-subtitle">Correlação entre temperatura máxima diária e horas de sol em fevereiro 2026</div>
+      <div class="chart-container tall">
+        <canvas id="scatterChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Line chart: temperature evolution -->
+    <div class="chart-card wide">
+      <div class="chart-title">Evolução da Temperatura ao Longo do Mês</div>
+      <div class="chart-subtitle">Temperatura máxima e mínima diária estimada — Braga, Fevereiro 2026</div>
+      <div class="chart-container tall">
+        <canvas id="tempChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="calendar-card">
+    <div class="chart-title">Calendário Meteorológico — Fevereiro 2026</div>
+    <div class="chart-subtitle">Previsão dia a dia · Passe o cursor para detalhes</div>
+    <div class="calendar-controls" id="calendarControls">
+      <button class="filter-btn active" data-filter="all">Todos</button>
+      <button class="filter-btn" data-filter="sunny">Sol</button>
+      <button class="filter-btn" data-filter="rainy">Chuva</button>
+      <button class="filter-btn" data-filter="cloudy">Nublado</button>
+      <button class="filter-btn" data-filter="mixed">Misto</button>
+    </div>
+
+    <div class="calendar-grid">
+      <div class="day-header">Dom</div>
+      <div class="day-header">Seg</div>
+      <div class="day-header">Ter</div>
+      <div class="day-header">Qua</div>
+      <div class="day-header">Qui</div>
+      <div class="day-header">Sex</div>
+      <div class="day-header">Sáb</div>
+
+      <!-- Fevereiro 2026 começa num domingo (dia 1) -->
+      <div class="day-cell sunny"><div class="day-num">1</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 13°C · 0mm</div></div>
+      <div class="day-cell rainy"><div class="day-num">2</div><div class="day-icon">🌧️</div><div class="tooltip">🌧️ Chuva · 11°C · 8mm</div></div>
+      <div class="day-cell rainy"><div class="day-num">3</div><div class="day-icon">🌧️</div><div class="tooltip">🌧️ Chuva · 10°C · 12mm</div></div>
+      <div class="day-cell cloudy"><div class="day-num">4</div><div class="day-icon">⛅</div><div class="tooltip">⛅ Nublado · 11°C · 2mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">5</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 14°C · 0mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">6</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 15°C · 0mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">7</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 14°C · 0mm</div></div>
+
+      <div class="day-cell rainy"><div class="day-num">8</div><div class="day-icon">🌧️</div><div class="tooltip">🌧️ Chuva · 10°C · 15mm</div></div>
+      <div class="day-cell rainy"><div class="day-num">9</div><div class="day-icon">🌧️</div><div class="tooltip">🌧️ Chuva · 9°C · 10mm</div></div>
+      <div class="day-cell mixed"><div class="day-num">10</div><div class="day-icon">🌦️</div><div class="tooltip">🌦️ Misto · 12°C · 4mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">11</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 13°C · 0mm</div></div>
+      <div class="day-cell cloudy"><div class="day-num">12</div><div class="day-icon">⛅</div><div class="tooltip">⛅ Nublado · 12°C · 1mm</div></div>
+      <div class="day-cell rainy"><div class="day-num">13</div><div class="day-icon">🌧️</div><div class="tooltip">🌧️ Chuva · 11°C · 9mm</div></div>
+      <div class="day-cell rainy"><div class="day-num">14</div><div class="day-icon">🌧️</div><div class="tooltip">🌧️ Chuva · 10°C · 11mm</div></div>
+
+      <div class="day-cell sunny"><div class="day-num">15</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 14°C · 0mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">16</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 15°C · 0mm</div></div>
+      <div class="day-cell mixed"><div class="day-num">17</div><div class="day-icon">🌦️</div><div class="tooltip">🌦️ Misto · 13°C · 3mm</div></div>
+      <div class="day-cell rainy"><div class="day-num">18</div><div class="day-icon">🌧️</div><div class="tooltip">🌧️ Chuva · 11°C · 7mm</div></div>
+      <div class="day-cell rainy"><div class="day-num">19</div><div class="day-icon">🌧️</div><div class="tooltip">🌧️ Chuva · 10°C · 8mm</div></div>
+      <div class="day-cell cloudy"><div class="day-num">20</div><div class="day-icon">⛅</div><div class="tooltip">⛅ Nublado · 12°C · 0mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">21</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 14°C · 0mm</div></div>
+
+      <div class="day-cell sunny"><div class="day-num">22</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 15°C · 0mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">23</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 16°C · 0mm</div></div>
+      <div class="day-cell mixed"><div class="day-num">24</div><div class="day-icon">🌦️</div><div class="tooltip">🌦️ Misto · 14°C · 2mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">25</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 15°C · 0mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">26</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 16°C · 0mm</div></div>
+      <div class="day-cell cloudy"><div class="day-num">27</div><div class="day-icon">⛅</div><div class="tooltip">⛅ Nublado · 13°C · 1mm</div></div>
+      <div class="day-cell sunny"><div class="day-num">28</div><div class="day-icon">☀️</div><div class="tooltip">☀️ Sol · 14°C · 0mm</div></div>
+    </div>
+    <div class="day-detail" id="dayDetail">Clica num dia para ver o detalhe aqui.</div>
+
+    <!-- Legend -->
+    <div style="display:flex;gap:20px;margin-top:20px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--soft)">
+        <div style="width:12px;height:12px;border-radius:3px;background:linear-gradient(135deg,#fff8e8,#ffefc0)"></div> Dia de Sol
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--soft)">
+        <div style="width:12px;height:12px;border-radius:3px;background:linear-gradient(135deg,#e8f3fc,#cce4f7)"></div> Dia de Chuva
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--soft)">
+        <div style="width:12px;height:12px;border-radius:3px;background:linear-gradient(135deg,#f0f5f9,#dde8f0)"></div> Nublado
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--soft)">
+        <div style="width:12px;height:12px;border-radius:3px;background:linear-gradient(135deg,#f5f0ff,#e8f3fc)"></div> Misto
+      </div>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="insights-grid">
+    <div class="insight-card">
+      <div class="insight-tag tag-rain">Precipitação</div>
+      <p class="insight-text">Em fevereiro, Braga regista em média <strong>13 dias de chuva</strong> com uma precipitação total de <strong>89mm</strong>. A chuva é mais intensa na primeira quinzena, com tendência a diminuir no final do mês, sinalizando a transição para a primavera.</p>
+    </div>
+    <div class="insight-card">
+      <div class="insight-tag tag-sun">Insolação</div>
+      <p class="insight-text">Com <strong>6.2 horas de sol por dia</strong> e <strong>11 dias predominantemente soalheiros</strong>, fevereiro surpreende positivamente. A segunda quinzena concentra a maioria dos dias de sol, tornando-se ideal para visitar o Bom Jesus do Monte.</p>
+    </div>
+    <div class="insight-card">
+      <div class="insight-tag tag-temp">Temperatura</div>
+      <p class="insight-text">As temperaturas oscilam entre <strong>5°C (mínima nocturna)</strong> e <strong>12.8°C (máxima diurna)</strong>, com humidade relativa de 82%. No final do mês, as máximas sobem até <strong>14-16°C</strong>, prenunciando a chegada da primavera bracarense.</p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>Dados baseados em médias históricas de 100+ anos para Braga, Portugal</div>
+    <div class="source-badge">
+      📊 Fontes: Weather Atlas · Weather2Visit · EaseWeather · Climate-Data.org
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── ANIMATED BACKGROUND ──────────────────────────────
+const bg = document.getElementById('bgLayer');
+
+// Clouds
+for (let i = 0; i < 3; i++) {
+  const c = document.createElement('div');
+  c.className = 'cloud-shape';
+  bg.appendChild(c);
+}
+
+// Rain drops
+for (let i = 0; i < 35; i++) {
+  const d = document.createElement('div');
+  d.className = 'rain-drop';
+  d.style.left = Math.random() * 100 + 'vw';
+  d.style.height = (Math.random() * 15 + 8) + 'px';
+  d.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+  d.style.animationDelay = (Math.random() * 3) + 's';
+  d.style.opacity = Math.random() * 0.5 + 0.2;
+  bg.appendChild(d);
+}
+
+// ── CHART DEFAULTS ───────────────────────────────────
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.color = '#6b8fa8';
+
+const RAIN_COLOR = 'rgba(74,144,217,0.8)';
+const SUN_COLOR = 'rgba(245,166,35,0.8)';
+const CLOUD_COLOR = 'rgba(143,184,216,0.7)';
+const MIXED_COLOR = 'rgba(150,120,200,0.7)';
+
+// ── WEEKLY BAR CHART ─────────────────────────────────
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Semana 1\n(1-7 Feb)', 'Semana 2\n(8-14 Feb)', 'Semana 3\n(15-21 Feb)', 'Semana 4\n(22-28 Feb)'],
+    datasets: [
+      {
+        label: 'Dias de Chuva',
+        data: [2, 4, 3, 1],
+        backgroundColor: RAIN_COLOR,
+        borderRadius: 8,
+        borderSkipped: false,
+      },
+      {
+        label: 'Dias de Sol',
+        data: [3, 2, 3, 5],
+        backgroundColor: SUN_COLOR,
+        borderRadius: 8,
+        borderSkipped: false,
+      },
+      {
+        label: 'Nublado/Misto',
+        data: [2, 1, 1, 1],
+        backgroundColor: CLOUD_COLOR,
+        borderRadius: 8,
+        borderSkipped: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12, boxHeight: 12 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} dia(s)` } }
+    },
+    scales: {
+      x: { grid: { display: false }, stacked: false },
+      y: { grid: { color: 'rgba(107,143,168,0.1)' }, ticks: { stepSize: 1 }, max: 6 }
+    }
+  }
+});
+
+// ── PIE CHART ────────────────────────────────────────
+new Chart(document.getElementById('pieChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Dias de Chuva', 'Dias de Sol', 'Nublado', 'Misto'],
+    datasets: [{
+      data: [13, 11, 3, 1],
+      backgroundColor: [RAIN_COLOR, SUN_COLOR, CLOUD_COLOR, MIXED_COLOR],
+      borderWidth: 3,
+      borderColor: 'rgba(255,255,255,0.9)',
+      hoverOffset: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '62%',
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12, boxHeight: 12 } },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const pct = ((ctx.raw / 28) * 100).toFixed(0);
+            return ` ${ctx.label}: ${ctx.raw} dias (${pct}%)`;
+          }
+        }
+      }
+    }
+  }
+});
+
+// ── SCATTER PLOT ─────────────────────────────────────
+const scatterData = [
+  {x:0,y:13},{x:0,y:10},{x:0,y:9},{x:0,y:11},{x:1,y:14},{x:1,y:15},
+  {x:1,y:14},{x:0,y:10},{x:0,y:9},{x:1,y:12},{x:1,y:13},{x:1,y:12},
+  {x:0,y:11},{x:0,y:10},{x:1,y:14},{x:1,y:15},{x:1,y:13},{x:0,y:11},
+  {x:0,y:10},{x:1,y:12},{x:1,y:14},{x:1,y:15},{x:1,y:16},{x:1,y:14},
+  {x:1,y:15},{x:1,y:16},{x:1,y:13},{x:1,y:14}
+].map((d, i) => ({
+  x: d.x === 1 ? +(6 + Math.random()*5).toFixed(1) : +(1 + Math.random()*3).toFixed(1),
+  y: d.y + (Math.random() * 0.8 - 0.4),
+  day: i + 1
+}));
+
+const sunnyScatter = scatterData.filter(d => d.x >= 5);
+const rainyScatter = scatterData.filter(d => d.x < 5);
+
+new Chart(document.getElementById('scatterChart'), {
+  type: 'scatter',
+  data: {
+    datasets: [
+      {
+        label: 'Dias de Sol',
+        data: sunnyScatter,
+        backgroundColor: 'rgba(245,166,35,0.7)',
+        borderColor: 'rgba(245,166,35,0.9)',
+        pointRadius: 8,
+        pointHoverRadius: 11,
+      },
+      {
+        label: 'Dias de Chuva/Nublado',
+        data: rainyScatter,
+        backgroundColor: 'rgba(74,144,217,0.7)',
+        borderColor: 'rgba(74,144,217,0.9)',
+        pointRadius: 8,
+        pointHoverRadius: 11,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12, boxHeight: 12 } },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label} · Sol: ${ctx.raw.x}h · Temp: ${ctx.raw.y.toFixed(1)}°C`
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'Horas de Sol no Dia', color: '#6b8fa8', padding: 8 },
+        grid: { color: 'rgba(107,143,168,0.1)' },
+        min: 0, max: 12
+      },
+      y: {
+        title: { display: true, text: 'Temperatura Máxima (°C)', color: '#6b8fa8', padding: 8 },
+        grid: { color: 'rgba(107,143,168,0.1)' },
+        min: 7, max: 18
+      }
+    }
+  }
+});
+
+// ── TEMPERATURE LINE CHART ───────────────────────────
+const days = Array.from({length:28}, (_,i) => i+1);
+const maxTemps = [13,11,10,11,14,15,14,10,9,12,13,12,11,10,14,15,13,11,10,12,14,15,16,14,15,16,13,14];
+const minTemps = [6,5,4,5,7,8,7,4,3,5,6,5,4,4,7,8,6,4,3,5,7,8,9,7,8,9,6,7];
+
+new Chart(document.getElementById('tempChart'), {
+  type: 'line',
+  data: {
+    labels: days,
+    datasets: [
+      {
+        label: 'Temperatura Máxima',
+        data: maxTemps,
+        borderColor: 'rgba(245,166,35,0.9)',
+        backgroundColor: 'rgba(245,166,35,0.08)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        borderWidth: 2.5,
+      },
+      {
+        label: 'Temperatura Mínima',
+        data: minTemps,
+        borderColor: 'rgba(74,144,217,0.9)',
+        backgroundColor: 'rgba(74,144,217,0.08)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        borderWidth: 2.5,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12, boxHeight: 12 } },
+      tooltip: {
+        callbacks: {
+          title: ctx => `Dia ${ctx[0].label} de Fevereiro`,
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}°C`
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'Dia do Mês', color: '#6b8fa8' },
+        grid: { color: 'rgba(107,143,168,0.1)' }
+      },
+      y: {
+        title: { display: true, text: 'Temperatura (°C)', color: '#6b8fa8' },
+        grid: { color: 'rgba(107,143,168,0.1)' },
+        min: 0, max: 20
+      }
+    }
+  }
+});
+
+// ── CALENDAR INTERACTION ──────────────────────────────
+const dayCells = Array.from(document.querySelectorAll('.calendar-grid .day-cell:not(.empty)'));
+const filterButtons = Array.from(document.querySelectorAll('#calendarControls .filter-btn'));
+const dayDetail = document.getElementById('dayDetail');
+
+function setActiveFilterButton(filter) {
+  filterButtons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+}
+
+function applyCalendarFilter(filter) {
+  dayCells.forEach(cell => {
+    const matches = filter === 'all' || cell.classList.contains(filter);
+    cell.classList.toggle('is-hidden', !matches);
+  });
+}
+
+function setDayDetail(cell) {
+  const dayNum = cell.querySelector('.day-num')?.textContent?.trim() || '-';
+  const detail = cell.querySelector('.tooltip')?.textContent?.trim() || 'Sem detalhes';
+  dayDetail.textContent = `Dia ${dayNum}: ${detail}`;
+}
+
+filterButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const filter = btn.dataset.filter || 'all';
+    setActiveFilterButton(filter);
+    applyCalendarFilter(filter);
+  });
+});
+
+dayCells.forEach(cell => {
+  cell.addEventListener('click', () => {
+    dayCells.forEach(c => c.classList.remove('is-selected'));
+    cell.classList.add('is-selected');
+    setDayDetail(cell);
+  });
+});
+</script>
+</body>
+</html>
